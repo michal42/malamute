@@ -3,7 +3,7 @@
     prefix = "mlm"
     script = "zproject.gsl"
     repository = "git://github.com/zeromq/malamute.git">
-    
+
     <include filename = "src/license.xml" />
     <version major = "1" minor = "1" />
     <use project = "czmq" />
@@ -28,7 +28,7 @@
     <class name = "mlm_msg" private = "1">Message held by server</class>
     <class name = "mlm_stream_simple" private = "1">Simple stream engine</class>
     <class name = "mlm_mailbox_simple" private = "1">Simple mailbox engine</class>
-    
+
     <model name = "mlm_proto" />
     <model name = "mlm_client" />
     <model name = "mlm_server" />

@@ -23,7 +23,22 @@ if [ "$BUILD_TYPE" == "default" ]; then
     CONFIG_OPTS+=("--quiet")
 
     # Clone and build dependencies
-    git clone --quiet --depth 1 https://github.com/zeromq/libzmq libzmq
+#    git clone --quiet --depth 1 https://github.com/jedisct1/libzmq libsodium
+    git clone --quiet --depth 1 -b 1.0.5-FTY-master https://github.com/42ity/libsodium libsodium
+    cd libsodium
+    git --no-pager log --oneline -n1
+    if [ -e autogen.sh ]; then
+        ./autogen.sh 2> /dev/null
+    fi
+    if [ -e buildconf ]; then
+        ./buildconf 2> /dev/null
+    fi
+    ./configure "${CONFIG_OPTS[@]}"
+    make -j4
+    make install
+    cd ..
+#    git clone --quiet --depth 1 https://github.com/zeromq/libzmq libzmq
+    git clone --quiet --depth 1 -b 4.2.0-FTY-master https://github.com/42ity/libzmq libzmq
     cd libzmq
     git --no-pager log --oneline -n1
     if [ -e autogen.sh ]; then
@@ -36,7 +51,8 @@ if [ "$BUILD_TYPE" == "default" ]; then
     make -j4
     make install
     cd ..
-    git clone --quiet --depth 1 https://github.com/zeromq/czmq czmq
+#    git clone --quiet --depth 1 https://github.com/zeromq/czmq czmq
+    git clone --quiet --depth 1 -b v3.0.2-FTY-master https://github.com/42ity/czmq czmq
     cd czmq
     git --no-pager log --oneline -n1
     if [ -e autogen.sh ]; then
