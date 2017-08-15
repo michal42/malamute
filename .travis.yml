@@ -4,13 +4,20 @@ language: c
 
 sudo: false
 
+cache:
+- ccache
+
+# Explicitly skip check_zproject, because the 42ITy fork has some
+# OBS patches applied over generated code, historically...
 env:
 - BUILD_TYPE=default
-- BUILD_TYPE=check_zproject
+#- BUILD_TYPE=check_zproject
 - BUILD_TYPE=check_zproto
 
-services: 
+services:
 - docker
+
+sudo: required
 
 addons:
   apt:
