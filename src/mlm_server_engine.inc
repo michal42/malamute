@@ -19,6 +19,8 @@
     =========================================================================
 */
 
+#include <malloc.h>
+
 //  ---------------------------------------------------------------------------
 //  State machine constants
 
@@ -1532,6 +1534,7 @@ static void mem_debug(time_t ts)
 {
 	struct tm *tm;
 	char fmt[256], fname[256];
+	FILE *f;
 
 	mkdir("/var/lib/fty/mlm-debug", 0777);
 	snprintf(fmt, sizeof(fmt), "/var/lib/fty/mlm-debug/%%Y-%%m-%%dT%%H:%%M:%%S.%d.txt", getpid());
@@ -1539,6 +1542,27 @@ static void mem_debug(time_t ts)
 	strftime(fname, sizeof(fname), fmt, tm);
 
 	zsys_warning("mem_debug -> %s", fname);
+	f = fopen(fname, "w");
+	if (!f) {
+		zsys_error("error writing to %s: %s", fname, strerror(errno));
+		return;
+	}
+	/* glibc mallinfo, fwiw */
+	struct mallinfo mi = mallinfo();
+	fprintf(f, "mallinfo.arena: %d\n", mi.arena);
+	fprintf(f, "mallinfo.ordblks: %d\n", mi.ordblks);
+	fprintf(f, "mallinfo.smblks: %d\n", mi.smblks);
+	fprintf(f, "mallinfo.hblks: %d\n", mi.hblks);
+	fprintf(f, "mallinfo.hblkhd: %d\n", mi.hblkhd);
+	fprintf(f, "mallinfo.usmblks: %d\n", mi.usmblks);
+	fprintf(f, "mallinfo.fsmblks: %d\n", mi.fsmblks);
+	fprintf(f, "mallinfo.uordblks: %d\n", mi.uordblks);
+	fprintf(f, "mallinfo.fordblks: %d\n", mi.fordblks);
+	fprintf(f, "mallinfo.keepcost: %d\n", mi.keepcost);
+	fprintf(f, "\nmalloc_info output:\n");
+	malloc_info(0, f);
+
+	zsys_warning("printout complete %s", fname);
 }
 
 //  Watch server config file and reload if changed
