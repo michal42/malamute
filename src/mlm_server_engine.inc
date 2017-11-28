@@ -1571,6 +1571,8 @@ static void mem_debug(s_server_t *self, time_t ts)
 		key = (char *) zlist_next (keys);
 	}
 	zlist_destroy (&keys);
+
+	fclose(f);
 	zsys_warning("printout complete %s", fname);
 }
 
