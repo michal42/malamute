@@ -1527,6 +1527,20 @@ s_server_handle_protocol (zloop_t *loop, zsock_t *reader, void *argument)
     return 0;
 }
 
+// debug
+static void mem_debug(time_t ts)
+{
+	struct tm *tm;
+	char fmt[256], fname[256];
+
+	mkdir("/var/lib/fty/mlm-debug", 0777);
+	snprintf(fmt, sizeof(fmt), "/var/lib/fty/mlm-debug/%%Y-%%m-%%dT%%H:%%M:%%S.%d.txt", getpid());
+	tm = gmtime(&ts);
+	strftime(fname, sizeof(fname), fmt, tm);
+
+	zsys_warning("mem_debug -> %s", fname);
+}
+
 //  Watch server config file and reload if changed
 
 static int
@@ -1537,7 +1551,7 @@ s_watch_server_config (zloop_t *loop, int timer_id, void *argument)
 
 	if (now - last_timestamp >= 60) {
 		last_timestamp = now;
-		zsys_warning("s_watch_server_config");
+		mem_debug(now);
 	}
     s_server_t *self = (s_server_t *) argument;
     if (zconfig_has_changed (self->config)
