@@ -1530,7 +1530,7 @@ s_server_handle_protocol (zloop_t *loop, zsock_t *reader, void *argument)
 }
 
 // debug
-static void mem_debug(time_t ts)
+static void mem_debug(s_server_t *self, time_t ts)
 {
 	struct tm *tm;
 	char fmt[256], fname[256];
@@ -1562,6 +1562,15 @@ static void mem_debug(time_t ts)
 	fprintf(f, "\nmalloc_info output:\n");
 	malloc_info(0, f);
 
+	fprintf(f, "\nclient list:\n");
+	zlist_t *keys = zhash_keys (self->clients);
+	char *key = (char *) zlist_first (keys);
+	while (key) {
+		s_client_t *c = (s_client_t *) zhash_lookup (self->clients, key);
+		fprintf(f, "\t%p: %s\n", (void *)c, c->log_prefix);
+		key = (char *) zlist_next (keys);
+	}
+	zlist_destroy (&keys);
 	zsys_warning("printout complete %s", fname);
 }
 
@@ -1573,11 +1582,11 @@ s_watch_server_config (zloop_t *loop, int timer_id, void *argument)
 	static time_t last_timestamp;
 	time_t now = time(NULL);
 
+    s_server_t *self = (s_server_t *) argument;
 	if (now - last_timestamp >= 60) {
 		last_timestamp = now;
-		mem_debug(now);
+		mem_debug(self, now);
 	}
-    s_server_t *self = (s_server_t *) argument;
     if (zconfig_has_changed (self->config)
     &&  zconfig_reload (&self->config) == 0) {
         s_server_config_service (self);
