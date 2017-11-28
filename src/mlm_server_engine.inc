@@ -1532,7 +1532,13 @@ s_server_handle_protocol (zloop_t *loop, zsock_t *reader, void *argument)
 static int
 s_watch_server_config (zloop_t *loop, int timer_id, void *argument)
 {
-	zsys_warning("s_watch_server_config");
+	static time_t last_timestamp;
+	time_t now = time(NULL);
+
+	if (now - last_timestamp >= 60) {
+		last_timestamp = now;
+		zsys_warning("s_watch_server_config");
+	}
     s_server_t *self = (s_server_t *) argument;
     if (zconfig_has_changed (self->config)
     &&  zconfig_reload (&self->config) == 0) {
