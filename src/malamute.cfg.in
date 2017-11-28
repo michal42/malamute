@@ -4,16 +4,16 @@
 server
     timeout = 10000     #   Client connection timeout, msec
     background = 0      #   Run as background process
-    workdir = .         #   Working directory for daemon
+    workdir = .         #   Working directory for daemon 
     verbose = 0         #   Do verbose logging of activity?
-    auth
-        verbose = 1     #   Debug authentication steps?
-        plain = passwords.cfg
-
+#    auth
+#        verbose = 1     #   Debug authentication steps?
+#        plain = passwords.cfg
+    
 #   Apply to the Malamute service
 mlm_server
-    security
-        mechanism = plain
     echo = binding Malamute service to 'ipc://@/malamute'
+#    security
+#        mechanism = plain
     bind
         endpoint = ipc://@/malamute
