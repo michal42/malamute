@@ -1,3 +1,7 @@
+/* Malamute jenkinsfile. Note that the (old) project's selftest uses fixed
+ * port numbers, so several checks done in parallel are often in conflict.
+ * This file is amended to do sequential tests. */
+
 pipeline {
     agent { label "devel-image-ipm_1.3 && x86_64" }
     parameters {
@@ -151,8 +155,8 @@ pipeline {
                 }
             }
         }
-        stage ('check') {
-            parallel {
+//        stage ('check') {
+//            parallel {
                 stage ('check with DRAFT') {
                     when { expression { return ( params.DO_BUILD_WITH_DRAFT_API && params.DO_TEST_CHECK ) } }
                     steps {
@@ -318,8 +322,8 @@ pipeline {
                       }
                     }
                 }
-            }
-        }
+//            }
+//        }
         stage ('deploy if appropriate') {
             steps {
                 script {
