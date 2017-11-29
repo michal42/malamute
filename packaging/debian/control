@@ -20,7 +20,7 @@ Build-Depends: debhelper (>= 9),
     libtool-bin,
     dh-autoreconf,
     libpgm-dev,
-    libzmq3-dev,
+    libzmq4-dev,
     libczmq-dev,
     pkg-config,
     systemd,
@@ -66,8 +66,8 @@ Package: libmlm-dev
 Section: libdevel
 Architecture: any
 Depends: ${misc:Depends},
-         libzmq3-dev,
-		 libczmq1,
+         libzmq4-dev,
+         libczmq1,
          libmlm1 (= ${binary:Version})
 Description: All the enterprise messaging patterns in one box (development files)
  .
