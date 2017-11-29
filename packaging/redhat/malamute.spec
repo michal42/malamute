@@ -18,7 +18,7 @@
 %global soname libmlm1
 
 Name:           malamute
-Version:        1.0~gitb95d8e4
+Version:        1.1~gitb95d8e4
 Release:        1
 License:        MPL-2.0
 Summary:        All the enterprise messaging patterns in one box
