@@ -1,0 +1,90 @@
+-------------------------------------------------------------------
+Thu Jul 7 10:09:48 UTC 2016 - Chernikava, Alena <AlenaChernikava@Eaton.com>
+
+malamute (1.0~gitb95d8e4)
+- Problem: someclient are trying to reconnect with wrong address
+  * fixing address issue
+
+-------------------------------------------------------------------
+Wed May 18 14:11:04 UTC 2016 - michalvyskocil@eaton.com
+
+- malamute-1.0~git891898f 
+ * enhanced robustness of client/server protocol
+
+-------------------------------------------------------------------
+Tue Mar 29 08:49:19 UTC 2016 - michalvyskocil@eaton.com
+
+- 1.0.0
+ * enhanced robustness of client/server protocol
+ * update zproject packaging
+
+-------------------------------------------------------------------
+Wed Dec  2 16:11:28 UTC 2015 - michalvyskocil@eaton.com
+
+- 0.1.0-20151202git92708aa, fixes
+  * #94 Problem: make memcheck fails
+
+-------------------------------------------------------------------
+Sun Nov 15 09:35:36 UTC 2015 - michalvyskocil@eaton.com
+
+- 0.1.0-20151112git814629d, fixes
+  * #88 Problem: assertion failure in src/mlm_server.c:113
+  * #87 message delivered with lost zframe
+  * #84 Problem: client does not reconnect if server bounces
+  * #81 Problem: Malamute cannot handle multiple quite fast producers
+  * #80 roblem: Malamute cannot handle a large amount of messages 
+
+-------------------------------------------------------------------
+Wed May 27 14:22:37 UTC 2015 - mvyskocil@opensuse.org
+
+- 0.1.0~git.1432269133.9cd9e2a
+ * fix the segfault
+   https://github.com/zeromq/malamute/pull/77/
+- remove the unit file installation hack
+
+-------------------------------------------------------------------
+Mon Mar  9 10:29:04 UTC 2015 - mvyskocil@opensuse.org
+
+- 0.1.0~git.1425246841.2964bb1
+ * corrected version number
+ * corrected soname of libmlm
+ * add _new, _set_plain, _connect methods
+- adapt the version in _service, spec and change the URL
+  to zeromq
+- rename shared library package to libmlm0
+
+-------------------------------------------------------------------
+Tue Jan 27 12:13:07 UTC 2015 - mvyskocil@opensuse.org
+
+- update to 1.1.0~git.1421761277.b62b4f9 
+ * fixes issues with unit tests
+
+-------------------------------------------------------------------
+Tue Jan 20 08:49:32 UTC 2015 - mvyskocil@opensuse.org
+
+- update to 1.1.0~git.1421702354.28b4fda 
+ * fixes issue#53 we losing mailbox messages when reconnecting with
+   same address 
+
+-------------------------------------------------------------------
+Fri Jan  9 13:47:20 UTC 2015 - mvyskocil@opensuse.org
+
+- update to 1.1.0~git.1420808039.ede4562 
+  * fix systemd unit installation
+- drop 0001-Problem-service-file-bad-location-on-64bit-rpm-syste.patch
+  already upstream
+
+-------------------------------------------------------------------
+Fri Jan  9 12:46:46 UTC 2015 - mvyskocil@opensuse.org
+
+- Make license field SUSE compatible
+- Reorder filelist
+- Add systemd marcos
+- Add 0001-Problem-service-file-bad-location-on-64bit-rpm-syste.patch
+  fixing issue with service file installed in /usr/lib64
+
+-------------------------------------------------------------------
+Fri Jan  9 12:25:16 UTC 2015 - karolhrdina@eaton.com
+
+- Initial packaging of malamute 1.1.0~git.1420211556.02988fe for
+  openSUSE

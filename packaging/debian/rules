@@ -1,15 +1,25 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
-override_dh_strip:
-	dh_strip --dbg-package=malamute-dbg
-
 override_dh_auto_test:
 	echo "Skipped for now"
 
 override_dh_auto_configure:
-	dh_auto_configure -- --with-systemd-units
+	dh_auto_configure -- --disable-static --enable-drafts --with-systemd-units $(shell dpkg-buildflags -DMLM_BUILD_DRAFT_API)
+
+#	dh_auto_configure -- --with-systemd-units
+
+override_dh_auto_install:
+	dh_auto_install
+
+override_dh_auto_clean:
+	./autogen.sh
+	dh_auto_clean
+
+override_dh_strip:
+	dh_strip --dbg-package=libmlm-dbg
 
 %:
-	dh $@ --with autoreconf,systemd
-
+	dh $@ \
+		--with autoreconf,systemd \
+		--parallel
