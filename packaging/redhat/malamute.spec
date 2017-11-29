@@ -135,9 +135,9 @@ echo "Skipped for now"
 %service_del_postun malamute
 
 %else
-%post -n %{soname} -p /sbin/ldconfig
+#%post -n %{soname} -p /sbin/ldconfig
 
-%postun -n %{soname} -p /sbin/ldconfig
+#%postun -n %{soname} -p /sbin/ldconfig
 %endif
 
 %files
