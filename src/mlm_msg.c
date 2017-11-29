@@ -78,6 +78,16 @@ mlm_msg_destroy (mlm_msg_t **self_p)
 
 
 //  --------------------------------------------------------------------------
+//  Return message sender
+
+char *
+mlm_msg_sender (mlm_msg_t *self)
+{
+    return self->sender;
+}
+
+
+//  --------------------------------------------------------------------------
 //  Return message subject
 
 char *

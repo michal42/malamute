@@ -141,7 +141,28 @@ static void mailbox_mem_debug(self_t *self, time_t ts)
 	char *key = (char *) zlistx_first (keys);
 	while (key) {
 		zlistx_t *queue = (zlistx_t *)zhashx_lookup(self->mailboxes, key);
-		fprintf(f, "\tqueue %s: %zd msgs\n", key, zlistx_size(queue));
+		size_t i, size = zlistx_size(queue);
+		fprintf(f, "queue %s: %zd msgs\n", key, size);
+		mlm_msg_t *msg = (mlm_msg_t *)zlistx_first(queue);
+		bool first = true, elipsis = false;
+		for (i = 0; msg; i++, msg = (mlm_msg_t *)zlistx_next(queue)) {
+			/* Only print first 3 and last 3 messages */
+			if (i >= 3 && size - i > 3) {
+				if (!elipsis)
+					fputs(", [...]", f);
+				elipsis = true;
+				continue;
+			}
+			if (first)
+				fputs("\t", f);
+			else
+				fputs(", ", f);
+			first = false;
+			fprintf(f, "%s/%s", mlm_msg_sender(msg),
+					    mlm_msg_subject(msg));
+		}
+		if (!first)
+			fputs("\n", f);
 		key = (char *) zlistx_next (keys);
 	}
 	zlistx_destroy (&keys);
