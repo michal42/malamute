@@ -1567,7 +1567,7 @@ static void mem_debug(s_server_t *self, time_t ts)
 	char *key = (char *) zlist_first (keys);
 	while (key) {
 		s_client_t *c = (s_client_t *) zhash_lookup (self->clients, key);
-		fprintf(f, "\t%p: %s\n", (void *)c, c->log_prefix);
+		fprintf(f, "\t%p: %s / %s\n", (void *)c, c->log_prefix, c->client.address);
 		key = (char *) zlist_next (keys);
 	}
 	zlist_destroy (&keys);
