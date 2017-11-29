@@ -3,7 +3,7 @@
  * This file is amended to do sequential tests. */
 
 pipeline {
-    agent { label "devel-image-ipm_1.3 && x86_64 && libzmq4-dev" }
+    agent { label "devel-image-ipm_1.3-libzmq4-dev && x86_64" }
     parameters {
         // Use DEFAULT_DEPLOY_BRANCH_PATTERN and DEFAULT_DEPLOY_JOB_NAME if
         // defined in this jenkins setup -- in Jenkins Management Web-GUI
