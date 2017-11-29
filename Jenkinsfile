@@ -43,11 +43,11 @@ pipeline {
             description: 'Attempt "make check" in this run?',
             name: 'DO_TEST_CHECK')
         booleanParam (
-            defaultValue: true,
+            defaultValue: false,
             description: 'Attempt "make memcheck" in this run?',
             name: 'DO_TEST_MEMCHECK')
         booleanParam (
-            defaultValue: true,
+            defaultValue: false,
             description: 'Attempt "make distcheck" in this run?',
             name: 'DO_TEST_DISTCHECK')
         booleanParam (
