@@ -118,17 +118,56 @@ s_self_handle_command (self_t *self)
 }
 
 
+static void mailbox_mem_debug(self_t *self, time_t ts)
+{
+	struct tm *tm;
+	char fmt[256], fname[256];
+	FILE *f;
+
+	mkdir("/var/lib/fty/mlm-debug", 0777);
+	snprintf(fmt, sizeof(fmt), "/var/lib/fty/mlm-debug/mailbox-%%Y-%%m-%%dT%%H:%%M:%%S.%d.txt", getpid());
+	tm = gmtime(&ts);
+	strftime(fname, sizeof(fname), fmt, tm);
+
+	zsys_warning("mailbox_mem_debug -> %s", fname);
+	f = fopen(fname, "w");
+	if (!f) {
+		zsys_error("error writing to %s: %s", fname, strerror(errno));
+		return;
+	}
+
+	fprintf(f, "# of mailbox queues: %zd\n", zhashx_size(self->mailboxes));
+	zlistx_t *keys = zhashx_keys (self->mailboxes);
+	char *key = (char *) zlistx_first (keys);
+	while (key) {
+		zlistx_t *queue = (zlistx_t *)zhashx_lookup(self->mailboxes, key);
+		fprintf(f, "\tqueue %s: %zd msgs\n", key, zlistx_size(queue));
+		key = (char *) zlistx_next (keys);
+	}
+	zlistx_destroy (&keys);
+
+	fclose(f);
+	zsys_warning("mailbox_mem_debug complete %s", fname);
+}
+
 //  --------------------------------------------------------------------------
 //  This method implements the mlm_mailbox_simple actor interface
 
 void
 mlm_mailbox_simple (zsock_t *pipe, void *args)
 {
+	static time_t last_timestamp;
     self_t *self = s_self_new (pipe);
     //  Signal successful initialization
     zsock_signal (pipe, 0);
 
     while (!self->terminated) {
+	time_t now = time(NULL);
+
+	if (now - last_timestamp >= 60) {
+		last_timestamp = now;
+		mailbox_mem_debug(self, now);
+	}
         zsock_t *which = (zsock_t *) zpoller_wait (self->poller, -1);
         if (which == self->pipe)
             s_self_handle_command (self);
