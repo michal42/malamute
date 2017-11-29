@@ -133,11 +133,12 @@ echo "Skipped for now"
 
 %postun
 %service_del_postun malamute
-%endif
 
+%else
 %post -n %{soname} -p /sbin/ldconfig
 
 %postun -n %{soname} -p /sbin/ldconfig
+%endif
 
 %files
 %defattr(-,root,root)
