@@ -162,18 +162,19 @@ mlm_mailbox_simple (zsock_t *pipe, void *args)
     zsock_signal (pipe, 0);
 
     while (!self->terminated) {
-	time_t now = time(NULL);
-
-	if (now - last_timestamp >= 60) {
-		last_timestamp = now;
-		mailbox_mem_debug(self, now);
-	}
         zsock_t *which = (zsock_t *) zpoller_wait (self->poller, -1);
         if (which == self->pipe)
             s_self_handle_command (self);
         else
         if (zpoller_terminated (self->poller))
             break;          //  Interrupted
+
+	time_t now = time(NULL);
+
+	if (now - last_timestamp >= 60) {
+		last_timestamp = now;
+		mailbox_mem_debug(self, now);
+	}
     }
     s_self_destroy (&self);
 }
