@@ -80,6 +80,7 @@ pipeline {
         stage ('cppcheck') {
                     when { expression { return ( params.DO_CPPCHECK ) } }
                     steps {
+                        milestone()
                         dir("tmp") {
                             deleteDir()
                         }
@@ -90,6 +91,7 @@ pipeline {
         }
         stage ('prepare') {
                     steps {
+                        milestone()
                         dir("tmp") {
                             deleteDir()
                         }
@@ -334,6 +336,8 @@ pipeline {
                     echo "Used:     myDEPLOY_JOB_NAME:${myDEPLOY_JOB_NAME} myDEPLOY_BRANCH_PATTERN:${myDEPLOY_BRANCH_PATTERN} myDEPLOY_REPORT_RESULT:${myDEPLOY_REPORT_RESULT}"
                     if ( (myDEPLOY_JOB_NAME != "") && (myDEPLOY_BRANCH_PATTERN != "") ) {
                         if ( env.BRANCH_NAME =~ myDEPLOY_BRANCH_PATTERN ) {
+                            echo "Would deploy ${GIT_URL} ${GIT_COMMIT} because tested branch '${env.BRANCH_NAME}' matches filter '${myDEPLOY_BRANCH_PATTERN}'"
+                            milestone()
                             def GIT_URL = sh(returnStdout: true, script: """git remote -v | egrep '^origin' | awk '{print \$2}' | head -1""").trim()
                             def GIT_COMMIT = sh(returnStdout: true, script: 'git rev-parse --verify HEAD').trim()
                             build job: "${myDEPLOY_JOB_NAME}", parameters: [
