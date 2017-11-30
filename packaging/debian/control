@@ -31,6 +31,7 @@ Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Pre-Depends: ${misc:Pre-Depends}
 Build-Depends: libzmq4-dev, libczmq-dev
+Depends: libzmq4, libczmq1
 Multi-Arch: same
 Description: All the enterprise messaging patterns in one box
  .
@@ -51,6 +52,7 @@ Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Pre-Depends: ${misc:Pre-Depends}
 Build-Depends: libzmq4-dev, libczmq-dev
+Depends: libzmq4, libczmq1
 Multi-Arch: same
 Description: All the enterprise messaging patterns in one box
  .
