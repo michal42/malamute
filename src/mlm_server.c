@@ -427,9 +427,10 @@ write_message_to_stream (client_t *self)
 static void
 write_message_to_mailbox (client_t *self)
 {
+    const char *address = mlm_proto_address(self->message);
     mlm_msg_t *msg = mlm_msg_new (
         self->address,
-        mlm_proto_address (self->message),
+        address,
         mlm_proto_subject (self->message),
         mlm_proto_tracker (self->message),
         mlm_proto_timeout (self->message),
@@ -437,17 +438,20 @@ write_message_to_mailbox (client_t *self)
 
     //  Try to dispatch to client immediately, if it's connected
     client_t *target = (client_t *) zhashx_lookup (
-        self->server->clients, mlm_proto_address (self->message));
+        self->server->clients, address);
 
     if (target) {
         assert (!target->msg);
         target->msg = msg;
         engine_send_event (target, mailbox_message_event);
     }
+    else if (strncmp(address, "web.", strlen("web.")) == 0)
+        // HACK: Drop responses to temporary fty-rest clients that arrive
+        // late
+        zsys_info ("Dropping message for disconnected client %s", address);
     else
         //  Else store in the eponymous mailbox
-        zsock_send (self->server->mailbox, "ssp", "STORE",
-                    mlm_proto_address (self->message), msg);
+        zsock_send (self->server->mailbox, "ssp", "STORE", address, msg);
 }
 
 
