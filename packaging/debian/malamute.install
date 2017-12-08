@@ -1,5 +1,6 @@
 usr/bin/malamute
 usr/bin/mshell
+etc/malamute/*.cfg
 usr/bin/mlm_tutorial
 usr/bin/mlm_perftest
 usr/lib/systemd/system/malamute*.service

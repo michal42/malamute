@@ -9,48 +9,99 @@
 #    file, You can obtain one at http://mozilla.org/MPL/2.0/.           
 
 Source:         malamute
-Section:        net
+Section:        libs
 Priority:       optional
 Maintainer:     malamute Developers <email@hostname.com>
 Standards-Version: 3.9.7
 Build-Depends: debhelper (>= 9),
-    pkg-config,
+    autoconf,
+    automake,
+    libtool,
+    libtool-bin,
     dh-autoreconf,
-    libzmq5-dev,
+    libpgm-dev,
+    libzmq4-dev,
     libczmq-dev,
-    dh-autoreconf,
+    pkg-config,
     systemd,
     dh-systemd
-
-Package: libmlm1
-Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: malamute
- This package contains shared library for malamute: zeromq message broker
-
-Package: libmlm-dev
-Architecture: any
-Section: libdevel
-Depends:
-    libzmq5-dev,
-    libczmq-dev,
-    libmlm1 (= ${binary:Version})
-Description: development files for malamute
- This package contains development files for malamute: zeromq message broker
 
 Package: malamute
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
-Description: zeromq message broker
- Main package for malamute: zeromq message broker
+Pre-Depends: ${misc:Pre-Depends}
+Build-Depends: libzmq4-dev, libczmq-dev
+Multi-Arch: same
+Description: All the enterprise messaging patterns in one box
+ .
+ Malamute is a messaging broker and a protocol for enterprise messaging.
+ Malamute helps to connect the pieces in a distributed software system.
+ It includes:
+ * Live Streamed Data
+ * On-Demand Streamed Data
+ * Publish-and-Subscribe (Pub-Sub)
+ * Direct Messaging
+ * Service Requests
+ * Credit Based Flow Control (CBFC)
+ .
+ This package provides the daemon itself.
 
-Package: malamute-dbg
+Package: libmlm1
 Architecture: any
-Section: debug
-Priority: extra
-Depends:
-    malamute (= ${binary:Version}),
-    ${misc:Depends}
-Description: debugging symbols for malamute
- This package contains the debugging symbols for malamute : zeromq message broker.
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Pre-Depends: ${misc:Pre-Depends}
+Build-Depends: libzmq4-dev, libczmq-dev
+Multi-Arch: same
+Description: All the enterprise messaging patterns in one box
+ .
+ Malamute is a messaging broker and a protocol for enterprise messaging.
+ Malamute helps to connect the pieces in a distributed software system.
+ It includes:
+ * Live Streamed Data
+ * On-Demand Streamed Data
+ * Publish-and-Subscribe (Pub-Sub)
+ * Direct Messaging
+ * Service Requests
+ * Credit Based Flow Control (CBFC)
 
+Package: libmlm-dev
+Section: libdevel
+Architecture: any
+Build-Depends: libzmq4-dev, libczmq-dev
+Depends: ${misc:Depends},
+         libzmq3-dev,
+         libczmq1,
+         libmlm1 (= ${binary:Version})
+Description: All the enterprise messaging patterns in one box (development files)
+ .
+ Malamute is a messaging broker and a protocol for enterprise messaging.
+ Malamute helps to connect the pieces in a distributed software system.
+ It includes:
+ * Live Streamed Data
+ * On-Demand Streamed Data
+ * Publish-and-Subscribe (Pub-Sub)
+ * Direct Messaging
+ * Service Requests
+ * Credit Based Flow Control (CBFC)
+ .
+ This package provides the development files for Malamute.
+ NOTE: Dependency mismatch (libzmq3-dev runtime vs libzmq4-dev build) is intentional.
+
+Package: libmlm-dbg
+Section: debug
+Architecture: any
+Depends: ${misc:Depends},
+         libmlm1 (= ${binary:Version})
+Description: All the enterprise messaging patterns in one box (development files)
+ .
+ Malamute is a messaging broker and a protocol for enterprise messaging.
+ Malamute helps to connect the pieces in a distributed software system.
+ It includes:
+ * Live Streamed Data
+ * On-Demand Streamed Data
+ * Publish-and-Subscribe (Pub-Sub)
+ * Direct Messaging
+ * Service Requests
+ * Credit Based Flow Control (CBFC)
+ .
+ This package provides the debug symbols for Malamute.

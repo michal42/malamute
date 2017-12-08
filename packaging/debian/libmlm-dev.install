@@ -1,3 +1,4 @@
 usr/include/*
-usr/lib/*/libmlm.so
-usr/lib/*/pkgconfig/libmlm.pc
+usr/lib*/*/lib*.so
+usr/lib*/*/pkgconfig/*
+usr/share/zproject/*
