@@ -20,7 +20,7 @@ Build-Depends: debhelper (>= 9),
     libtool-bin,
     dh-autoreconf,
     libpgm-dev,
-    libzmq4-dev,
+    libzmq3-dev,
     libczmq-dev,
     pkg-config,
     systemd,
@@ -30,7 +30,7 @@ Package: malamute
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Pre-Depends: ${misc:Pre-Depends}
-Build-Depends: libzmq4-dev, libczmq-dev
+Build-Depends: libzmq3-dev, libczmq-dev
 Multi-Arch: same
 Description: All the enterprise messaging patterns in one box
  .
@@ -50,7 +50,7 @@ Package: libmlm1
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Pre-Depends: ${misc:Pre-Depends}
-Build-Depends: libzmq4-dev, libczmq-dev
+Build-Depends: libzmq3-dev, libczmq-dev
 Multi-Arch: same
 Description: All the enterprise messaging patterns in one box
  .
@@ -67,7 +67,7 @@ Description: All the enterprise messaging patterns in one box
 Package: libmlm-dev
 Section: libdevel
 Architecture: any
-Build-Depends: libzmq4-dev, libczmq-dev
+Build-Depends: libzmq3-dev, libczmq-dev
 Depends: ${misc:Depends},
          libzmq3-dev,
          libczmq1,
@@ -85,7 +85,6 @@ Description: All the enterprise messaging patterns in one box (development files
  * Credit Based Flow Control (CBFC)
  .
  This package provides the development files for Malamute.
- NOTE: Dependency mismatch (libzmq3-dev runtime vs libzmq4-dev build) is intentional.
 
 Package: libmlm-dbg
 Section: debug
