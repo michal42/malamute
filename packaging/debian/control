@@ -86,7 +86,7 @@ Description: All the enterprise messaging patterns in one box (development files
  .
  This package provides the development files for Malamute.
 
-Package: libmlm-dbg
+Package: malamute-dbg
 Section: debug
 Architecture: any
 Depends: ${misc:Depends},
