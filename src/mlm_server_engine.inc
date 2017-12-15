@@ -1577,7 +1577,7 @@ static void server_mem_debug(s_server_t *self, time_t ts)
 	while (key) {
 		stream_t *s = (stream_t *) zhashx_lookup(self->server.streams,
 			key);
-		fprintf (f, "\t%p/%p: %s\n", (void*)s, (void*)s->backend, s->name);
+		fprintf (f, "\t%p / %p: %s\n", (void*)s, (void*)s->backend, s->name);
 		key = (char *) zlistx_next (Keys);
 	}
 	fclose(f);

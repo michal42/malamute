@@ -204,6 +204,39 @@ s_self_handle_message (self_t *self)
     return 0;
 }
 
+static void stream_mem_debug(self_t *self, time_t ts)
+{
+	struct tm *tm;
+	char fmt[256], fname[256];
+	FILE *f;
+
+	mkdir("/var/lib/fty/mlm-debug", 0777);
+	snprintf(fmt, sizeof(fmt), "/var/lib/fty/mlm-debug/stream-%p-%%Y-%%m-%%dT%%H:%%M:%%S.%d.txt", (void*)self->msgpipe, getpid());
+	tm = gmtime(&ts);
+	strftime(fname, sizeof(fname), fmt, tm);
+
+	zsys_warning("stream_mem_debug -> %s", fname);
+	f = fopen(fname, "w");
+	if (!f) {
+		zsys_error("error writing to %s: %s", fname, strerror(errno));
+		return;
+	}
+
+	selector_t *selector = (selector_t *) zlistx_first (self->selectors);
+	while (selector) {
+		fprintf(f, "selector /%s/\n", selector->pattern);
+		void *client = zlistx_first(selector->clients);
+		while (client) {
+			fprintf(f, "\t%p\n", client);
+			client = zlistx_next(selector->clients);
+		}
+		selector = (selector_t *)zlistx_next(self->selectors);
+	}
+
+	fclose(f);
+	zsys_warning("stream_mem_debug complete %s", fname);
+}
+
 
 //  --------------------------------------------------------------------------
 //  This method implements the mlm_stream_simple actor interface
@@ -211,6 +244,7 @@ s_self_handle_message (self_t *self)
 void
 mlm_stream_simple (zsock_t *pipe, void *args)
 {
+	static time_t last_timestamp;
     self_t *self = s_self_new (pipe, (zsock_t *) args);
     //  Signal successful initialization
     zsock_signal (pipe, 0);
@@ -225,6 +259,13 @@ mlm_stream_simple (zsock_t *pipe, void *args)
         else
         if (zpoller_terminated (self->poller))
             break;          //  Interrupted
+
+	time_t now = time(NULL);
+
+	if (now - last_timestamp >= 60) {
+		last_timestamp = now;
+		stream_mem_debug(self, now);
+	}
     }
     s_self_destroy (&self);
 }
