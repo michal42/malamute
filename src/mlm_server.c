@@ -41,6 +41,7 @@ typedef struct {
     char *name;                 //  Stream name
     zactor_t *actor;            //  Stream engine, zactor
     zsock_t *msgpipe;           //  Socket to send messages to for stream
+    zsock_t *backend;
 } stream_t;
 
 
@@ -144,6 +145,7 @@ s_stream_new (client_t *client, const char *name)
         self->name = strdup (name);
         if (self->name)
             self->msgpipe = zsys_create_pipe (&backend);
+		self->backend = backend;
         if (self->msgpipe) {
             engine_handle_socket (client->server, self->msgpipe, s_forward_stream_traffic);
             self->actor = zactor_new (mlm_stream_simple, backend);
