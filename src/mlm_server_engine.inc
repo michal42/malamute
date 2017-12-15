@@ -1571,7 +1571,15 @@ static void server_mem_debug(s_server_t *self, time_t ts)
 		key = (char *) zlist_next (keys);
 	}
 	zlist_destroy (&keys);
-
+	fprintf(f, "\nstream list:\n");
+	zlistx_t *Keys = zhashx_keys (self->server.streams);
+	key = (char *) zlistx_first (Keys);
+	while (key) {
+		stream_t *s = (stream_t *) zhashx_lookup(self->server.streams,
+			key);
+		fprintf (f, "\t%p: %s\n", (void*)s, s->name);
+		key = (char *) zlistx_next (Keys);
+	}
 	fclose(f);
 	zsys_warning("server_mem_debug complete %s", fname);
 }
