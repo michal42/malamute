@@ -1580,6 +1580,8 @@ static void server_mem_debug(s_server_t *self, time_t ts)
 		fprintf (f, "\t%p / %p: %s\n", (void*)s, (void*)s->backend, s->name);
 		key = (char *) zlistx_next (Keys);
 	}
+	fprintf(f, "\nrouter socket:\n");
+	zmq_inspect_socket(zsock_resolve(self->router), f);
 	fclose(f);
 	zsys_warning("server_mem_debug complete %s", fname);
 }
