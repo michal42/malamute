@@ -585,6 +585,7 @@ client_expired (client_t *self)
 {
     if (*self->address)
         zsys_info ("client address='%s' - expired", self->address);
+    self->server->force_log = "expired";
 }
 
 
@@ -597,6 +598,7 @@ client_closed_connection (client_t *self)
 {
     if (*self->address)
         zsys_info ("client address='%s' - closed connection", self->address);
+    self->server->force_log = "closed";
 }
 
 
@@ -608,6 +610,7 @@ static void
 client_had_exception (client_t *self)
 {
     zsys_info ("client address='%s' - unimplemented command", self->address);
+    self->server->force_log = "exception";
 }
 
 
@@ -620,6 +623,7 @@ deregister_the_client (client_t *self)
 {
     if (*self->address)
         zsys_info ("client address='%s' - de-registering", self->address);
+    self->server->force_log = "deregistered";
 
     //  Cancel all stream subscriptions
     stream_t *stream = (stream_t *) zlistx_detach (self->readers, NULL);
