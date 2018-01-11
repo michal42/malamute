@@ -78,6 +78,7 @@ struct _server_t {
     zhashx_t *streams;          //  Holds stream instances by name
     zhashx_t *services;         //  Holds services by name
     zhashx_t *clients;          //  Holds clients by address
+    const char *force_log;
 };
 
 
@@ -357,6 +358,7 @@ register_new_client (client_t *self)
     if (*self->address)
         zsys_info ("client address='%s' - registering", self->address);
     mlm_proto_set_status_code (self->message, MLM_PROTO_SUCCESS);
+    self->server->force_log = "registered";
 }
 
 

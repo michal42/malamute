@@ -1498,53 +1498,27 @@ s_server_handle_pipe (zloop_t *loop, zsock_t *reader, void *argument)
     return 0;
 }
 
-//  Handle a protocol message from the client
-
-static int
-s_server_handle_protocol (zloop_t *loop, zsock_t *reader, void *argument)
-{
-    s_server_t *self = (s_server_t *) argument;
-    //  We process as many messages as we can, to reduce the overhead
-    //  of polling and the reactor:
-    while (zsock_events (self->router) & ZMQ_POLLIN) {
-        if (mlm_proto_recv (self->message, self->router))
-            return -1;      //  Interrupted; exit zloop
-
-        //  TODO: use binary hashing on routing_id
-        char *hashkey = zframe_strhex (mlm_proto_routing_id (self->message));
-        s_client_t *client = (s_client_t *) zhash_lookup (self->clients, hashkey);
-        if (client == NULL) {
-            client = s_client_new (self, mlm_proto_routing_id (self->message));
-            zhash_insert (self->clients, hashkey, client);
-            zhash_freefn (self->clients, hashkey, s_client_free);
-        }
-        free (hashkey);
-        //  Any input from client counts as activity
-        if (client->ticket)
-            zloop_ticket_reset (self->loop, client->ticket);
-
-        //  Pass to client state machine
-        s_client_execute (client, s_protocol_event (self->message));
-    }
-    return 0;
-}
-
 // debug
-static void server_mem_debug(s_server_t *self, time_t ts)
+static void server_mem_debug(s_server_t *self, const char *routing_id)
 {
 	struct tm *tm;
 	char fmt[256], fname[256];
 	FILE *f;
+	static time_t last_timestamp;
+	time_t now = time(NULL);
 
+	if (!self->server.force_log && now - last_timestamp < 60)
+		return;
 	mkdir("/var/lib/fty/mlm-debug", 0777);
-	snprintf(fmt, sizeof(fmt), "/var/lib/fty/mlm-debug/server-%%Y-%%m-%%dT%%H:%%M:%%S.%d.txt", getpid());
-	tm = gmtime(&ts);
+	snprintf(fmt, sizeof(fmt), "/var/lib/fty/mlm-debug/server-%%Y-%%m-%%dT%%H:%%M:%%S.%d%s%s.txt", getpid(), self->server.force_log ? "-" : "", self->server.force_log);
+	tm = gmtime(&now);
 	strftime(fname, sizeof(fname), fmt, tm);
 
 	zsys_warning("server_mem_debug -> %s", fname);
 	f = fopen(fname, "w");
 	if (!f) {
 		zsys_error("error writing to %s: %s", fname, strerror(errno));
+		self->server.force_log = NULL;
 		return;
 	}
 	/* glibc mallinfo, fwiw */
@@ -1582,8 +1556,44 @@ static void server_mem_debug(s_server_t *self, time_t ts)
 	}
 	fprintf(f, "\nrouter socket:\n");
 	zmq_inspect_socket(zsock_resolve(self->router), f);
+	if (self->server.force_log)
+		fprintf(f, "\nLast client id (%s): %s\n", self->server.force_log, routing_id);
 	fclose(f);
+	last_timestamp = now;
+	self->server.force_log = NULL;
 	zsys_warning("server_mem_debug complete %s", fname);
+}
+
+//  Handle a protocol message from the client
+
+static int
+s_server_handle_protocol (zloop_t *loop, zsock_t *reader, void *argument)
+{
+    s_server_t *self = (s_server_t *) argument;
+    //  We process as many messages as we can, to reduce the overhead
+    //  of polling and the reactor:
+    while (zsock_events (self->router) & ZMQ_POLLIN) {
+        if (mlm_proto_recv (self->message, self->router))
+            return -1;      //  Interrupted; exit zloop
+
+        //  TODO: use binary hashing on routing_id
+        char *hashkey = zframe_strhex (mlm_proto_routing_id (self->message));
+        s_client_t *client = (s_client_t *) zhash_lookup (self->clients, hashkey);
+        if (client == NULL) {
+            client = s_client_new (self, mlm_proto_routing_id (self->message));
+            zhash_insert (self->clients, hashkey, client);
+            zhash_freefn (self->clients, hashkey, s_client_free);
+        }
+        //  Any input from client counts as activity
+        if (client->ticket)
+            zloop_ticket_reset (self->loop, client->ticket);
+
+        //  Pass to client state machine
+        s_client_execute (client, s_protocol_event (self->message));
+	server_mem_debug(self, hashkey);
+        free (hashkey);
+    }
+    return 0;
 }
 
 //  Watch server config file and reload if changed
@@ -1591,14 +1601,7 @@ static void server_mem_debug(s_server_t *self, time_t ts)
 static int
 s_watch_server_config (zloop_t *loop, int timer_id, void *argument)
 {
-	static time_t last_timestamp;
-	time_t now = time(NULL);
-
     s_server_t *self = (s_server_t *) argument;
-	if (now - last_timestamp >= 60) {
-		last_timestamp = now;
-		server_mem_debug(self, now);
-	}
     if (zconfig_has_changed (self->config)
     &&  zconfig_reload (&self->config) == 0) {
         s_server_config_service (self);
