@@ -1510,7 +1510,8 @@ static void server_mem_debug(s_server_t *self, const s_client_t *last_client)
 	if (!self->server.force_log && now - last_timestamp < 60)
 		return;
 	mkdir("/var/lib/fty/mlm-debug", 0777);
-	snprintf(fmt, sizeof(fmt), "/var/lib/fty/mlm-debug/server-%%Y-%%m-%%dT%%H:%%M:%%S.%d%s.txt", getpid(), self->server.force_log ? self->server.force_log : "timer");
+	snprintf(fmt, sizeof(fmt), "/var/lib/fty/mlm-debug/server-%%Y-%%m-%%dT%%H:%%M:%%S.%s.%d.txt", self->server.force_log ? self->server.force_log : "timer",
+	getpid());
 	tm = gmtime(&now);
 	strftime(fname, sizeof(fname), fmt, tm);
 
