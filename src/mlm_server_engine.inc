@@ -1499,7 +1499,7 @@ s_server_handle_pipe (zloop_t *loop, zsock_t *reader, void *argument)
 }
 
 // debug
-static void server_mem_debug(s_server_t *self, const char *routing_id)
+static void server_mem_debug(s_server_t *self, const s_client_t *last_client)
 {
 	struct tm *tm;
 	char fmt[256], fname[256];
@@ -1510,7 +1510,7 @@ static void server_mem_debug(s_server_t *self, const char *routing_id)
 	if (!self->server.force_log && now - last_timestamp < 60)
 		return;
 	mkdir("/var/lib/fty/mlm-debug", 0777);
-	snprintf(fmt, sizeof(fmt), "/var/lib/fty/mlm-debug/server-%%Y-%%m-%%dT%%H:%%M:%%S.%d%s%s.txt", getpid(), self->server.force_log ? "-" : "", self->server.force_log ? : "");
+	snprintf(fmt, sizeof(fmt), "/var/lib/fty/mlm-debug/server-%%Y-%%m-%%dT%%H:%%M:%%S.%d%s.txt", getpid(), self->server.force_log ? self->server.force_log : "timer");
 	tm = gmtime(&now);
 	strftime(fname, sizeof(fname), fmt, tm);
 
@@ -1541,7 +1541,10 @@ static void server_mem_debug(s_server_t *self, const char *routing_id)
 	char *key = (char *) zlist_first (keys);
 	while (key) {
 		s_client_t *c = (s_client_t *) zhash_lookup (self->clients, key);
-		fprintf(f, "\t%p: %s / %s\n", (void *)c, c->log_prefix, c->client.address);
+		fprintf(f, "%s\t%p: %s / %s / %s\n",
+			c == last_client ? "*" : "",
+			(void *)c,
+			c->client.address, c->hashkey, c->log_prefix);
 		key = (char *) zlist_next (keys);
 	}
 	zlist_destroy (&keys);
@@ -1556,8 +1559,6 @@ static void server_mem_debug(s_server_t *self, const char *routing_id)
 	}
 	fprintf(f, "\nrouter socket:\n");
 	zmq_inspect_socket(zsock_resolve(self->router), f);
-	if (self->server.force_log)
-		fprintf(f, "\nLast client id (%s): %s\n", self->server.force_log, routing_id);
 	fclose(f);
 	last_timestamp = now;
 	self->server.force_log = NULL;
@@ -1584,14 +1585,14 @@ s_server_handle_protocol (zloop_t *loop, zsock_t *reader, void *argument)
             zhash_insert (self->clients, hashkey, client);
             zhash_freefn (self->clients, hashkey, s_client_free);
         }
+        free (hashkey);
         //  Any input from client counts as activity
         if (client->ticket)
             zloop_ticket_reset (self->loop, client->ticket);
 
         //  Pass to client state machine
         s_client_execute (client, s_protocol_event (self->message));
-	server_mem_debug(self, hashkey);
-        free (hashkey);
+	server_mem_debug(self, client);
     }
     return 0;
 }
