@@ -1558,6 +1558,7 @@ static void server_mem_debug(s_server_t *self, const s_client_t *last_client)
 		fprintf (f, "\t%p / %p: %s\n", (void*)s, (void*)s->backend, s->name);
 		key = (char *) zlistx_next (Keys);
 	}
+	zlistx_destroy(&Keys);
 	fprintf(f, "\nrouter socket:\n");
 	zmq_inspect_socket(zsock_resolve(self->router), f);
 	fclose(f);
