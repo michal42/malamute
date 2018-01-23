@@ -168,6 +168,7 @@ s_self_handle_command (self_t *self)
         void *client;
         zsock_recv (self->cmdpipe, "p", &client);
         s_stream_cancel (self, client);
+        zsock_bsend (self->msgpipe, "pp", client, MLM_STREAM_ACK_CANCEL);
     }
     //  Cleanup pipe if any argument frames are still waiting to be eaten
     if (zsock_rcvmore (self->cmdpipe)) {
