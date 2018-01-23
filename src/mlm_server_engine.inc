@@ -26,7 +26,9 @@ typedef enum {
     start_state = 1,
     connected_state = 2,
     defaults_state = 3,
-    settling_state = 4
+    settling_state = 4,
+    //  Internal state to mark zombie clients
+    zombie_state_ = 5
 } state_t;
 
 typedef enum {
@@ -97,6 +99,7 @@ typedef struct {
     zloop_t *loop;              //  Reactor for server sockets
     mlm_proto_t *message;       //  Message received or sent
     zhash_t *clients;           //  Clients we're connected to
+    zhash_t *zombies;           //  Zombie clients waiting to be free()d
     zconfig_t *config;          //  Configuration tree
     uint client_id;             //  Client identifier counter
     size_t timeout;             //  Default client expiry timeout
@@ -113,6 +116,7 @@ typedef struct {
 typedef struct {
     client_t client;            //  Application-level client context
     s_server_t *server;         //  Parent server context
+    size_t refcount;            //  Optional reference counter
     char *hashkey;              //  Key into server->clients hash
     zframe_t *routing_id;       //  Routing_id back to client
     uint unique_id;             //  Client identifier in server
@@ -142,6 +146,8 @@ static int
     s_client_handle_wakeup (zloop_t *loop, int timer_id, void *argument);
 static int
     s_client_handle_ticket (zloop_t *loop, int timer_id, void *argument);
+static void
+    s_client_finalize (s_client_t **self_p);
 static void
     register_new_client (client_t *self);
 static void
@@ -184,6 +190,31 @@ static void
 //  ---------------------------------------------------------------------------
 //  These methods are an internal API for actions
 
+//  Optional reference counting. The engine itself does not need this, but if
+//  the application wishes to delay the final destruction of a client, it
+//  can do so by using these functions
+static void engine_client_get (client_t *client)
+{
+    if (!client)
+        return;
+    s_client_t *self = (s_client_t *) client;
+    ++self->refcount;
+}
+
+//  Relese the application reference to client
+static void engine_client_put (client_t *client)
+{
+    if (!client)
+        return;
+    s_client_t *self = (s_client_t *) client;
+    if (--self->refcount == 0 && self->state == zombie_state_) {
+        zhash_delete (self->server->zombies, self->hashkey);
+        s_client_finalize (&self);
+    }
+}
+
+#define engine_client_is_valid(c) ((c) && ((s_client_t *)(c))->state != zombie_state_)
+
 //  Set the next event, needed in at least one action in an internal
 //  state; otherwise the state machine will wait for a message on the
 //  router socket and treat that as the event.
@@ -191,7 +222,7 @@ static void
 static void
 engine_set_next_event (client_t *client, event_t event)
 {
-    if (client) {
+    if (engine_client_is_valid (client)) {
         s_client_t *self = (s_client_t *) client;
         self->next_event = event;
     }
@@ -203,7 +234,7 @@ engine_set_next_event (client_t *client, event_t event)
 static void
 engine_set_exception (client_t *client, event_t event)
 {
-    if (client) {
+    if (engine_client_is_valid (client)) {
         s_client_t *self = (s_client_t *) client;
         self->exception = event;
     }
@@ -216,7 +247,7 @@ engine_set_exception (client_t *client, event_t event)
 static void
 engine_set_wakeup_event (client_t *client, size_t delay, event_t event)
 {
-    if (client) {
+    if (engine_client_is_valid (client)) {
         s_client_t *self = (s_client_t *) client;
         if (self->wakeup) {
             zloop_timer_end (self->server->loop, self->wakeup);
@@ -234,7 +265,7 @@ engine_set_wakeup_event (client_t *client, size_t delay, event_t event)
 static void
 engine_send_event (client_t *client, event_t event)
 {
-    if (client) {
+    if (engine_client_is_valid (client)) {
         s_client_t *self = (s_client_t *) client;
         s_client_execute (self, event);
     }
@@ -304,7 +335,7 @@ engine_set_monitor (server_t *server, size_t interval, zloop_timer_fn monitor)
 static void
 engine_set_log_prefix (client_t *client, const char *string)
 {
-    if (client) {
+    if (engine_client_is_valid (client)) {
         s_client_t *self = (s_client_t *) client;
         snprintf (self->log_prefix, sizeof (self->log_prefix) - 1,
             "%6d:%-33s", self->unique_id, string);
@@ -342,6 +373,8 @@ engine_verbose (server_t *server)
 static void
 s_satisfy_pedantic_compilers (void)
 {
+    engine_client_get (NULL);
+    engine_client_put (NULL);
     engine_set_next_event (NULL, NULL_event);
     engine_set_exception (NULL, NULL_event);
     engine_set_wakeup_event (NULL, 0, NULL_event);
@@ -446,11 +479,23 @@ s_client_destroy (s_client_t **self_p)
         zframe_destroy (&self->routing_id);
         //  Provide visual clue if application misuses client reference
         engine_set_log_prefix (&self->client, "*** TERMINATED ***");
-        client_terminate (&self->client);
-        free (self->hashkey);
-        free (self);
-        *self_p = NULL;
+        if (!self->refcount) {
+            s_client_finalize (self_p);
+        } else {
+            zhash_insert (self->server->zombies, self->hashkey, self);
+            self->state = zombie_state_;
+        }
     }
+}
+
+static void
+s_client_finalize (s_client_t **self_p)
+{
+    s_client_t *self = *self_p;
+    free (self->hashkey);
+    client_terminate (&self->client);
+    free (self);
+    *self_p = NULL;
 }
 
 //  Callback when we remove client from 'clients' hash table
@@ -1249,6 +1294,9 @@ s_client_execute (s_client_t *self, event_t event)
                     }
                 }
                 break;
+            case zombie_state_:
+                zsys_error ("%p: zombie client context used", self);
+                return;
         }
         //  If we had an exception event, interrupt normal programming
         if (self->exception) {
@@ -1334,6 +1382,7 @@ s_server_new (zsock_t *pipe)
     zsock_set_unbounded (self->router);
     self->message = mlm_proto_new ();
     self->clients = zhash_new ();
+    self->zombies = zhash_new ();
     self->config = zconfig_new ("root", NULL);
     self->loop = zloop_new ();
     srandom ((unsigned int) zclock_time ());
@@ -1358,6 +1407,13 @@ s_server_destroy (s_server_t **self_p)
         mlm_proto_destroy (&self->message);
         //  Destroy clients before destroying the server
         zhash_destroy (&self->clients);
+        //  Forcibly destroy any zombie clients as we are shutting down
+        s_client_t *zombie = (s_client_t *)zhash_first (self->zombies);
+        while (zombie) {
+            s_client_finalize (&zombie);
+            zombie = (s_client_t *)zhash_next (self->zombies);
+        }
+        zhash_destroy (&self->zombies);
         server_terminate (&self->server);
         zsock_destroy (&self->router);
         zconfig_destroy (&self->config);
