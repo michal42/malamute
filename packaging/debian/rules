@@ -17,7 +17,7 @@ override_dh_auto_clean:
 	dh_auto_clean
 
 override_dh_strip:
-	dh_strip --dbg-package=libmlm-dbg
+	dh_strip --dbg-package=malamute-dbg
 
 %:
 	dh $@ \
